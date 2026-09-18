@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Day Theme Variables (Warm Off-White & Soft Charcoal) */
+    --bg-app: #f6f7f4;
+    --bg-surface: #ffffff;
+    --bg-elevated: #eceee9;
+    --bg-input: #ffffff;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-medium: rgba(0, 0, 0, 0.14);
+    --border-hairline: rgba(0, 0, 0, 0.07);
+    --text-primary: #181b1f;
+    --text-secondary: #525866;
+    --text-muted: #848b98;
+    
+    /* Default Accent (Emerald) */
+    --color-accent: #10b981;
+    --color-accent-hover: #059669;
+    --color-accent-ring: rgba(16, 185, 129, 0.35);
+    --color-accent-subtle: rgba(16, 185, 129, 0.12);
+    --color-accent-badge-bg: rgba(16, 185, 129, 0.15);
+    --color-accent-badge-text: #10b981;
+
+    /* Semantic Status (Immutable across accents) */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-info: #3b82f6;
+  }
+
+  /* Night Theme (Graphite / Slate / Soft Charcoal - comfortable, non-OLED) */
+  .theme-night,
+  :root.dark {
+    --bg-app: #17191c;
+    --bg-surface: #202328;
+    --bg-elevated: #292d32;
+    --bg-input: #1b1e22;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.15);
+    --border-hairline: rgba(255, 255, 255, 0.08);
+    --text-primary: #f2f3f0;
+    --text-secondary: #a8adb5;
+    --text-muted: #6c727d;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: #ffffff;
+  }
+}
+
+/* Custom Scrollbar adapting to active theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Technical Hairline Utilities */
+.border-hairline {
+  border-color: var(--border-hairline);
+}
+
+.border-subtle {
+  border-color: var(--border-subtle);
+}
+
+/* Tabular numeric alignment for financial precision */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Technical background patterns */
+.theme-night .bg-grid-technical,
+:root.dark .bg-grid-technical {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+.theme-day .bg-grid-technical {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+}
+
+/* Scanner beam animation */
+@keyframes scanner-beam {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 96%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scanner-beam {
+  animation: scanner-beam 2s ease-in-out infinite alternate;
+}
+
+/* Status dot pulse */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+}
+
+.animate-status-pulse {
+  animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

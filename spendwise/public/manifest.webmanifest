@@ -1,0 +1,19 @@
+{
+  "name": "SpendWise - Personal Finance Operating System",
+  "short_name": "SpendWise",
+  "description": "Daily money management, smart budgeting, and seamless friends expense splitting for Gen-Z.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#17191C",
+  "theme_color": "#10B981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"]
+}

@@ -1,0 +1,207 @@
+// Prisma schema for SpendWise Production Database (PostgreSQL)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  name         String
+  passwordHash String
+  avatar       String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  settings     UserSettings?
+  monthPlans   MonthPlan[]
+  transactions Transaction[]
+  friends      Friend[]       @relation("UserFriends")
+  memberships  GroupMember[]
+  splits       SplitExpense[] @relation("CreatedSplits")
+  refreshTokens RefreshToken[]
+
+  sentRequests     Friendship[] @relation("SentFriendships")
+  receivedRequests Friendship[] @relation("ReceivedFriendships")
+}
+
+model UserSettings {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currencyCode   String   @default("INR")
+  currencySymbol String   @default("₹")
+  locale         String   @default("en-IN")
+  theme          String   @default("system")
+  accentColor    String   @default("emerald")
+  firstDayOfWeek Int      @default(1)
+  dateFormat     String   @default("DD/MM/YYYY")
+  budgetWarnings Boolean  @default(true)
+  dailyReminder  Boolean  @default(false)
+  splitReminders Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model MonthPlan {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthKey        String         // YYYY-MM
+  estimatedIncome Float          @default(0)
+  actualIncome    Float          @default(0)
+  savingsGoal     Float          @default(0)
+  fixedExpenses   FixedExpense[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([userId, monthKey])
+}
+
+model FixedExpense {
+  id          String    @id @default(uuid())
+  monthPlanId String
+  monthPlan   MonthPlan @relation(fields: [monthPlanId], references: [id], onDelete: Cascade)
+  name        String
+  amount      Float
+  createdAt   DateTime  @default(now())
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date             String   // YYYY-MM-DD
+  amount           Float
+  category         String
+  merchant         String?
+  note             String?
+  needWant         String   @default("need") // need | want
+  plannedUnplanned String   @default("planned") // planned | unplanned
+  source           String   @default("manual") // manual | imported | split
+  splitExpenseId   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Friend {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friendUserId String?  // optional link to real user
+  name         String
+  avatar       String?
+  email        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Friendship {
+  id          String   @id @default(uuid())
+  requesterId String
+  requester   User     @relation("SentFriendships", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User     @relation("ReceivedFriendships", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED, BLOCKED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+}
+
+model Group {
+  id          String         @id @default(uuid())
+  name        String
+  avatar      String?
+  currency    String         @default("INR")
+  inviteCode  String?        @unique
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  members  GroupMember[]
+  expenses SplitExpense[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String?
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name     String
+  role     String   @default("MEMBER") // ADMIN, MEMBER
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, name])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model SplitExpense {
+  id           String             @id @default(uuid())
+  groupId      String?
+  group        Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  createdById  String
+  creator      User               @relation("CreatedSplits", fields: [createdById], references: [id], onDelete: Cascade)
+  title        String
+  totalAmount  Float
+  currency     String             @default("INR")
+  paidById     String
+  payerName    String
+  splitMethod  String             @default("EQUALLY") // EQUALLY, EXACT, PERCENTAGE, SHARES
+  date         String
+  notes        String?
+  status       String             @default("ACTIVE") // ACTIVE, SETTLED
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  participants SplitParticipant[]
+  settlements  Settlement[]
+}
+
+model SplitParticipant {
+  id              String       @id @default(uuid())
+  expenseId       String
+  expense         SplitExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  participantId   String       // user id or friend id or "you"
+  participantName String
+  shareAmount     Float
+  percentage      Float?
+  shares          Float?
+  amountPaid      Float        @default(0)
+  balance         Float        @default(0)
+  settledAmount   Float        @default(0)
+  createdAt       DateTime     @default(now())
+}
+
+model Settlement {
+  id        String        @id @default(uuid())
+  expenseId String?
+  expense   SplitExpense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  groupId   String?
+  fromId    String
+  fromName  String
+  toId      String
+  toName    String
+  amount    Float
+  currency  String        @default("INR")
+  status    String        @default("SETTLED") // PENDING, SETTLED
+  note      String?
+  settledAt DateTime      @default(now())
+  createdAt DateTime      @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
